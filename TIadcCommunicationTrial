@@ -1,0 +1,92 @@
+/*
+
+
+*/
+#include <SPI.h>
+
+#define CONVST 8
+#define RD 10
+//#define BUSY 9
+
+byte x=0; byte y=0;  //Storage for ADC result high and low byte
+word data[4]={0};  //Storage for approx 6us of data
+word dataCycle[66]={0};
+
+void setup() {
+  SerialUSB.begin(115200);
+  SPI.begin();
+ 
+  /*
+   * Replaced by SPI.beginTransaction(SPISettings(speed, MSBFIRST, SPI_MODE0))
+  SPI.setClockDivider(5); //Set for 8Mhz SPI (can be faster if using Due)
+  SPI.setBitOrder(MSBFIRST);
+  SPI.setDataMode(SPI_MODE0);
+  */
+
+  SPI.beginTransaction(SPISettings(20000000, MSBFIRST, SPI_MODE0));
+  
+  pinMode(CONVST, OUTPUT);
+  pinMode(RD, OUTPUT);
+//  pinMode(BUSY, INPUT);
+  digitalWrite(CONVST, LOW);  //Set CONVST low by default
+  digitalWrite(RD, LOW);  //Set and keep RD (SS) low
+ }
+
+void loop() {             //record # ADC samples
+  
+  
+int myTime = micros();    // begin time stamp
+
+  for (int i=0;i<4;i++){
+  
+    
+    x=SPI.transfer(0B0000000001000000);      //(See ads7263.pdf or "data sheet"
+    y=SPI.transfer(0B0000000000000000);      // Filler/// is this needed? What is this?
+    delayMicroseconds(4);  //This delay is necessary to meet Tacq time (see datasheet p5). Change to 3us if voltage reads low
+    //Trigger a conversion with a fast pulse
+    noInterrupts();
+    #if defined (__SAM3X8E__) // Arduino Due compatible
+      REG_PIOC_SODR |= (0x01 << 22);
+      REG_PIOC_CODR |= (0x01 << 22);
+    #else
+      PORTB |= 0x01;
+      PORTB &= ~0x01;
+    #endif
+    interrupts();
+    
+    //Wait for conversion to be finished
+    delayMicroseconds(5);
+    
+    //store ADC result as a word
+    data[i]=word(x,y);
+    //data[i]^=0B100000000000;
+    SerialUSB.print("\n");  
+  SerialUSB.print(data[i]);
+  
+  }
+
+
+  
+int myTime1 = micros(); // end time stamp
+
+/*
+ 
+ SB.println("\nMAX\tMIN\tAVG\tMEDIAN\tTime of Calc");
+  SerialUSB.print("\n");  
+  SerialUSB.print(maxVoltage);
+  SerialUSB.print("\t");
+  //SerialUSB.print(minVoltage);
+  SerialUSB.print("\t");
+  //SerialUSB.print(averageVoltage);
+  SerialUSB.print("\t");
+  //SerialUSB.print(medianVoltage);
+  SerialUSB.print("\t");
+  SerialUSB.println(myTime1-myTime);
+*/
+
+
+  delay(3333);
+      
+  //SerialUSB.print("end data dump");
+  //SerialUSB.print("\n"); 
+}  
