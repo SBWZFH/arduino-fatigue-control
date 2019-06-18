@@ -1,0 +1,29 @@
+Current wiring for arduino due >> TI ADS8363EVM (EVM)
+
+Jumper settings 
+JP6 >> from [1-2] to [2-3]  From 5v to 3.3v SPI communication voltage
+JP5 >> from [1-2] to [2-3]  Seperates convst and rd
+
+
+Analog input to EVM for full differential    (J1 header)
+
+J1.14 Input A0 + 
+J1.16 Input A0 -
+
+SPI communication   (J3 header)
+
+J3.1 CS >> SS (slave select [default low input for active])
+J3.5  >> SCLK
+J3.7  >> RD
+J3.11 >> SDI
+J3.13 >> SDO
+J3.15 >> BUSY
+J3.17 >> CONVST (Conversion start)
+
+Power supply  (J4 header)
+
+J4.3 +5v           >> arduino +5V
+J4.6 signal ground >> arduino ground
+
+J4.9 +3.3v         >> arduino +3.3v
+J4.5 3.3 ground    >> arduino ground
